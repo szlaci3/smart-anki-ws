@@ -30,8 +30,8 @@ app.get('/cards', async (req, res) => {
 // Create a new card
 app.post('/cards', async (req, res) => {
   try {
-    const { id, name, description } = req.body;
-    const card = { id, name, description };
+    const { id, sides } = req.body;
+    const card = { id, sides };
     await redis.hset(`card:${id}`, card);
     await redis.rpush('cards', id);
     res.status(201).json(card);
@@ -45,8 +45,8 @@ app.post('/cards', async (req, res) => {
 app.put('/cards/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description } = req.body;
-    const card = { id, name, description };
+    const { sides } = req.body;
+    const card = { id, sides };
     await redis.hset(`card:${id}`, card);
     res.json(card);
   } catch (error) {
