@@ -2,7 +2,7 @@ const express = require('express');
 const Redis = require('ioredis');
 
 const app = express();
-const redis = new Redis();
+const redis = new Redis('redis://red-ci6l9mp8g3nfucbohhu0:6379');
 
 app.get('/cards', async (req, res) => {
   try {
@@ -27,3 +27,4 @@ app.get('/cards', async (req, res) => {
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
 });
+
