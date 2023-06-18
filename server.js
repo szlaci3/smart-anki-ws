@@ -15,7 +15,15 @@ app.use(cors({
 app.get('/cards', async (req, res) => {
   try {
     // Retrieve the list of card IDs from Redis
-    const cards = await redis.lrange('cards', 0, -1);
+    const cardIds = await redis.lrange('cards', 0, -1);
+
+    // Retrieve the card objects from Redis using the IDs
+    const cards = await Promise.all(
+      cardIds.map(async (cardId) => {
+        const card = await redis.hgetall(`card:${cardId}`);
+        return card;
+      })
+    );
 
     res.json(cards);
   } catch (error) {
