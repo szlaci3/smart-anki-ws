@@ -1,10 +1,15 @@
 const express = require('express');
 const Redis = require('ioredis');
+const cors = require('cors');
 
 const app = express();
 const redis = new Redis('redis://red-ci6l9mp8g3nfucbohhu0:6379');
 
 app.use(express.json()); // Enable JSON request body parsing
+
+app.use(cors({
+  origin: 'https://smart-anki.onrender.com'
+}));
 
 // Retrieve all cards
 app.get('/cards', async (req, res) => {
