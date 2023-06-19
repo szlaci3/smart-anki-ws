@@ -37,6 +37,7 @@ app.post('/cards', async (req, res) => {
   try {
     await redis.flushdb();
 
+
     // const { id, sides } = req.body;
     // const card = { id, sides };
     // await redis.hset(`card:${id}`, card);
