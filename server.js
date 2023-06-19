@@ -35,13 +35,13 @@ app.get('/cards', async (req, res) => {
 // Create a new card
 app.post('/cards', async (req, res) => {
   try {
-    // await redis.flushdb();
+    await redis.flushdb();
 
 
-    const { id, sides } = req.body;
-    const card = { id, sides };
-    await redis.hset(`card:${id}`, card);
-    await redis.rpush('cards', id);
+    // const { id, sides } = req.body;
+    // const card = { id, sides };
+    // await redis.hset(`card:${id}`, card);
+    // await redis.rpush('cards', id);
     res.status(201).json(card);
   } catch (error) {
     console.error('Error creating card:', error);
