@@ -7,9 +7,18 @@ const redis = new Redis('redis://red-ci6l9mp8g3nfucbohhu0:6379');
 
 app.use(express.json()); // Enable JSON request body parsing
 
-app.use(cors({
-  origin: 'https://smart-anki.onrender.com'
-}));
+const whitelist = ['https://smart-anki.onrender.com', 'http://localhost:3000']
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}
+
+app.use(cors(corsOptions));
 
 // Retrieve all cards
 app.get('/cards', async (req, res) => {
