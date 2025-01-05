@@ -7,16 +7,16 @@ const redis = new Redis('redis://red-ci6l9mp8g3nfucbohhu0:6379');
 
 app.use(express.json()); // Enable JSON request body parsing
 
-const whitelist = ['https://smart-anki.onrender.com', 'http://localhost:3000']
+const whitelist = ['https://smart-anki.onrender.com', 'http://localhost:3000', 'http://localhost:8000'];
 const corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1 || !origin) {
-      callback(null, true)
+      callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'))
+      callback(new Error('Not allowed by CORS'));
     }
   }
-}
+};
 
 app.use(cors(corsOptions));
 
@@ -41,12 +41,26 @@ app.get('/cards', async (req, res) => {
   }
 });
 
+// Retrieve a card by ID
+app.get('/cards/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const card = await redis.hgetall(`card:${id}`);
+
+    if (!card || Object.keys(card).length === 0) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
+    res.json(card);
+  } catch (error) {
+    console.error('Error retrieving card by ID:', error);
+    res.status(500).json({ error: 'Failed to retrieve card' });
+  }
+});
+
 // Create a new card
 app.post('/cards', async (req, res) => {
   try {
-    // await redis.flushdb();
-
-
     const { id, sides } = req.body;
     const card = { id, sides };
     await redis.hset(`card:${id}`, card);
@@ -63,6 +77,7 @@ app.put('/cards/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { sides, rate, reviewedAt } = req.body;
+
     const card = { id, sides, rate, reviewedAt };
     await redis.hset(`card:${id}`, card);
     res.json(card);
@@ -75,4 +90,3 @@ app.put('/cards/:id', async (req, res) => {
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
 });
-
