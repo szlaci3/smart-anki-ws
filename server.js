@@ -7,7 +7,7 @@ const redis = new Redis('redis://red-ci6l9mp8g3nfucbohhu0:6379');
 
 app.use(express.json()); // Enable JSON request body parsing
 
-const whitelist = ['https://smart-anki.onrender.com', 'http://localhost:3000', 'http://localhost:8000'];
+const whitelist = ['https://smart-anki.onrender.com', 'https://localhost:3000', 'https://localhost:8000'];
 const corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1 || !origin) {
