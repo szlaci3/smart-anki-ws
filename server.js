@@ -20,6 +20,29 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+app.post('/api/migrate-rates', async (req, res) => {
+  try {
+    const cards = await redis.keys('card:*');
+    console.log(`Found ${cards.length} cards to check`);
+    
+    for (const cardKey of cards) {
+      const card = await redis.hgetall(cardKey);
+      if (card.rate === '10minutes') {
+        await redis.multi()
+          .hset(cardKey, 'rate', '0')
+          .exec();
+        console.log(`Updated ${cardKey}`);
+      }
+    }
+    
+    res.json({ success: true, message: `Processed ${cards.length} cards` });
+  } catch (error) {
+    console.error('Migration error:', error);
+    res.status(500).json({ success: false, error: 'Migration failed' });
+  }
+});
+
+
 // Retrieve all cards
 app.get('/cards', async (req, res) => {
   try {
