@@ -129,6 +129,84 @@ app.put('/cards/:id', async (req, res) => {
   }
 });
 
+// Delete a card by ID
+app.delete('/cards/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await redis.del(`card:${id}`);
+    await redis.lrem('cards', 0, id);
+    res.json({ success: true, message: 'Card deleted' });
+  } catch (error) {
+    console.error('Error deleting card:', error);
+    res.status(500).json({ error: 'Failed to delete card' });
+  }
+});
+
+// Delete all cards
+app.delete('/cards', async (req, res) => {
+  try {
+    const cardIds = await redis.lrange('cards', 0, -1);
+    if (cardIds.length > 0) {
+      const keys = cardIds.map(id => `card:${id}`);
+      await redis.del(...keys);
+      await redis.del('cards');
+    }
+    res.json({ success: true, message: 'All cards deleted' });
+  } catch (error) {
+    console.error('Error deleting all cards:', error);
+    res.status(500).json({ error: 'Failed to delete all cards' });
+  }
+});
+
+// Export all cards as JSON backup
+app.get('/cards/export', async (req, res) => {
+  try {
+    const cardIds = await redis.lrange('cards', 0, -1);
+    const cards = await Promise.all(
+      cardIds.map(async (cardId) => {
+        const card = await redis.hgetall(`card:${cardId}`);
+        return card;
+      })
+    );
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="card-database-backup-${new Date().toISOString().split('T')[0]}.json"`);
+    res.json(cards);
+  } catch (error) {
+    console.error('Error exporting cards:', error);
+    res.status(500).json({ error: 'Failed to export cards' });
+  }
+});
+
+// Import cards from JSON backup
+app.post('/cards/import', async (req, res) => {
+  try {
+    const { cards } = req.body;
+    
+    if (!Array.isArray(cards)) {
+      return res.status(400).json({ error: 'Invalid file format. Expected an array of cards.' });
+    }
+
+    // Clear existing cards
+    const existingCardIds = await redis.lrange('cards', 0, -1);
+    if (existingCardIds.length > 0) {
+      const keys = existingCardIds.map(id => `card:${id}`);
+      await redis.del(...keys);
+      await redis.del('cards');
+    }
+
+    // Import new cards
+    for (const card of cards) {
+      await redis.hset(`card:${card.id}`, card);
+      await redis.rpush('cards', card.id);
+    }
+
+    res.json({ success: true, message: `Successfully imported ${cards.length} cards` });
+  } catch (error) {
+    console.error('Error importing cards:', error);
+    res.status(500).json({ error: 'Failed to import cards' });
+  }
+});
+
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
 });
