@@ -42,6 +42,25 @@ app.post('/api/migrate-rates', async (req, res) => {
   }
 });
 
+app.post('/api/remove-reviewed-at', async (req, res) => {
+  try {
+    const cardKeys = await redis.keys('card:*');
+    let updated = 0;
+
+    for (const key of cardKeys) {
+      const card = await redis.hgetall(key);
+      if ('reviewedAt' in card) {
+        await redis.hdel(key, 'reviewedAt');
+        updated += 1;
+      }
+    }
+
+    res.json({ success: true, updated });
+  } catch (error) {
+    console.error('reviewedAt cleanup failed:', error);
+    res.status(500).json({ success: false, error: 'cleanup failed' });
+  }
+});
 
 // Retrieve all cards
 app.get('/cards', async (req, res) => {
