@@ -99,9 +99,9 @@ app.post('/cards', async (req, res) => {
 app.put('/cards/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { sides, rate, reviewedAt } = req.body;
+    const { sides, rate, dueAt } = req.body;
 
-    const card = { id, sides, rate, reviewedAt };
+    const card = { id, sides, rate, dueAt };
     await redis.hset(`card:${id}`, card);
     res.json(card);
   } catch (error) {
